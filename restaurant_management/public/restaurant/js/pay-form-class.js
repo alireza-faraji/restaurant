@@ -42,6 +42,30 @@ class PayForm extends DeskForm {
                 }
             });
         }
+        this.fields_dict.hotel_room_number.df.onchange = () => {
+        console.log("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+             frappe.call({
+                 method: 'hms.hms_module.doctype.hms_folio.hms_folio.get_customer_and_folio_with_room_number',
+                 args: {
+                     "room_name": this.get_value("hotel_room_number")
+                 },
+                 callback: (r) => {
+                    console.log(r.message);
+                    if(r.message.status=="ok"){
+                        this.set_value("customer", r.message.customer_name);
+                        this.set_value("folio", r.message.folio_name);
+                        this.button_payment.val(__("Send To Folio"));
+                    }else{
+                    //    if(this.get_value("hotel_room_number")=="")
+                         //   frappe.msgprint(__('There Is No Reservation on this room!'))
+                        this.set_value("customer", "");
+                        this.set_value("folio", "");
+                        this.set_value("hotel_room_number", "");
+                        this.button_payment.val(__("Pay"));
+                    }
+                 }
+             });
+        }
     }
 
     init_synchronize() {
@@ -65,6 +89,7 @@ class PayForm extends DeskForm {
 
         this.get_field("num_pad").$wrapper.parent().parent().css("max-width", "300px");
         this.get_field("payment_methods").$wrapper.parent().parent().removeClass("col-sm-6").addClass("col");
+        
     }
 
     async reload(){
@@ -201,7 +226,8 @@ class PayForm extends DeskForm {
             args: {
                 mode_of_payment: this.payments_values,
                 customer: this.get_value("customer"),
-                dinners: this.dinners.float_val
+                dinners: this.dinners.float_val,
+                folio_name:this.get_value("folio")
             },
             always: (r) => {
                 RM.ready();
@@ -266,6 +292,10 @@ class PayForm extends DeskForm {
 
             this.set_value("total_payment", total);
             this.set_value("change_amount", (total - this.order.amount));
+            this.button_payment.val(__("Pay"));
+            this.set_value("folio", "");
+
+
         }, 0);
     }
 }

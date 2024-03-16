@@ -25,7 +25,9 @@
   "taxes_and_charges",
   "selling_price_list",
   "company",
-  "customer_name"
+  "customer_name",
+  "hotel_room_number",
+  "folio"
  ],
  "fields": [
   {
@@ -148,12 +150,28 @@
    "fieldtype": "Link",
    "label": "Address",
    "options": "Address"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "hotel_room_number",
+   "fieldtype": "Link",
+   "label": "Hotel Room Number",
+   "options": "HMS Room",
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "folio",
+   "fieldtype": "Link",
+   "label": "Folio",
+   "options": "HMS Folio",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-01-25 12:56:32.997518",
+ "modified": "2024-03-08 22:58:18.506640",
  "modified_by": "Administrator",
  "module": "Restaurant Management",
  "name": "Table Order",

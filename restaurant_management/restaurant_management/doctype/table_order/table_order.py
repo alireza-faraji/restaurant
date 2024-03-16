@@ -133,7 +133,7 @@ class TableOrder(Document):
         if status is not None:
             RestaurantManage.production_center_notify(status)
 
-    def make_invoice(self, mode_of_payment, customer=None, dinners=0):
+    def make_invoice(self, mode_of_payment, customer=None, dinners=0,folio_name=None):
         if self.link_invoice:
             return frappe.throw(_("The order has been invoiced"))
 
@@ -159,23 +159,45 @@ class TableOrder(Document):
         if len(entry_items) == 0:
             frappe.throw(_("There is not Item in this Order"))
 
-        invoice = self.get_invoice(entry_items, True)
+        if folio_name is None or len(folio_name) == 0:
+            invoice = self.get_invoice(entry_items, True)
+            invoice.payments = []
+            for mp in mode_of_payment:
+                invoice.append('payments', dict(
+                    mode_of_payment=mp,
+                    amount=mode_of_payment[mp]
+                ))
 
-        invoice.payments = []
-        for mp in mode_of_payment:
-            invoice.append('payments', dict(
-                mode_of_payment=mp,
-                amount=mode_of_payment[mp]
-            ))
+            invoice.validate()
+            invoice.save()
+            invoice.submit()
 
-        invoice.validate()
-        invoice.save()
-        invoice.submit()
+            self.status = "Invoiced"
+            self.link_invoice = invoice.name
+            self.save()
+        else:
+            invoice = self.get_invoice(entry_items, True)
+            invoice.payments = []
+            for mp in mode_of_payment:
+                invoice.append('payments', dict(
+                    mode_of_payment="Hotel Folio",
+                    amount=mode_of_payment[mp]
+                ))
+            from hms.hms_module.doctype.hms_folio_transaction.hms_folio_transaction import add_charge
+            res=add_charge('Restaurant POS',invoice.grand_total,'A','Restaurant Table Order '+self.name,folio_name)
+					
+	
+            invoice.validate()
+            invoice.save()
+            invoice.submit()
 
-        self.status = "Invoiced"
-        self.link_invoice = invoice.name
-        self.save()
-        
+            self.status = "Invoiced"
+            self.link_invoice = invoice.name
+            self.save()
+
+            folio = frappe.get_doc("HMS Folio",folio_name)
+           # frappe.throw(_("Folio Is ") + "<br>" +folio_name)
+
         frappe.db.set_value("Table Order", self.name, "docstatus", 1)
 
         frappe.msgprint(_('Invoice Created'), indicator='green', alert=True)
